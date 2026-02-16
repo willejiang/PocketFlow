@@ -1,0 +1,9 @@
+openai>=1.0.0
+pyyaml>=6.0
+requests>=2.28.0
+
+# Optional for different model providers:
+# pip install anthropic      # For Anthropic Claude models
+# pip install transformers torch  # For local Transformers models
+# pip install vllm           # For vLLM optimized inference
+# pip install pillow         # For vision models with local inference

@@ -1,0 +1,77 @@
+# Cookbook Manifest Template
+#
+# Place this file as 'cookbook_manifest.yaml' in your cookbook directory.
+# The unified agent will use this to understand how to use your cookbook.
+
+# Basic information
+name: pocketflow-my-cookbook
+version: "1.0.0"
+description: |
+  Brief description of what this cookbook does.
+  This will be shown to users and to the LLM.
+
+# Author information (optional)
+author: Your Name
+url: https://github.com/your/repo
+
+# Tags for categorization
+# Common tags: agent, rag, search, chat, tool, async, batch, api, sql, vision, workflow
+tags:
+  - agent
+  - tool
+
+# Python dependencies
+dependencies:
+  - openai
+  - pyyaml
+
+# Actions this cookbook provides
+# Each action becomes available to the unified agent
+actions:
+  - name: my_action
+    description: Description of what this action does
+    parameters:
+      input:
+        type: str
+        description: The main input parameter
+        required: true
+      max_results:
+        type: int
+        description: Maximum number of results to return
+        required: false
+        default: 10
+    
+  - name: another_action
+    description: Another action provided by this cookbook
+    parameters:
+      query:
+        type: str
+        description: Search query
+        required: true
+
+# Entry point configuration (optional)
+# Tells the adapter how to run your cookbook
+entry_point:
+  # Type can be: flow, function, or class
+  type: flow
+  
+  # Module to import
+  module: flow
+  
+  # Function/class name to call
+  name: create_flow
+  
+  # How to map action parameters to shared state
+  parameter_mapping:
+    input: question
+    query: search_query
+
+# Shared state keys this cookbook reads from
+inputs:
+  - question
+  - context
+
+# Shared state keys this cookbook writes to
+outputs:
+  - answer
+  - result
