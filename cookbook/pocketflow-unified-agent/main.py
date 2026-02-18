@@ -52,13 +52,9 @@ def setup_model(model_spec: str = None, api_key: str = None):
     """Setup the model provider based on specification."""
     global _model_provider
     
-    from model_providers import (
-        get_model_registry,
-        create_from_string,
-        setup_default_model,
-        ModelConfig,
-        create_provider,
-    )
+    from model_providers import get_model_registry, ModelConfig, create_provider
+    from model_providers.factory import create_from_string, setup_default_model
+
     from utils.call_llm import set_provider
     
     registry = get_model_registry()
