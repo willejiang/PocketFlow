@@ -14,10 +14,11 @@ from adapters import (
     get_adapter_registry,
     discover_cookbooks,
     load_cookbook_adapter,
+    get_system_tools_adapter,
 )
 
 
-def create_unified_flow(max_iterations: int = 20) -> Flow:
+def create_unified_flow(max_iterations: int = 100) -> Flow:
     """
     Create the unified agent flow.
     
@@ -45,7 +46,9 @@ def create_unified_flow(max_iterations: int = 20) -> Flow:
 
 def load_adapters(
     cookbook_names: List[str],
-    registry: Optional[AdapterRegistry] = None
+    registry: Optional[AdapterRegistry] = None,
+    include_system_tools: bool = True,
+    allow_commands: bool = True
 ) -> AdapterRegistry:
     """
     Load adapters for the specified cookbooks.
@@ -53,6 +56,8 @@ def load_adapters(
     Args:
         cookbook_names: List of cookbook names to load
         registry: Optional existing registry to use
+        include_system_tools: Whether to include built-in system tools (file/command ops)
+        allow_commands: Whether to allow command execution in system tools
         
     Returns:
         AdapterRegistry with loaded adapters
@@ -60,6 +65,15 @@ def load_adapters(
     if registry is None:
         AdapterRegistry.reset()
         registry = get_adapter_registry()
+    
+    # Always load system tools first (file operations, commands, etc.)
+    if include_system_tools:
+        try:
+            system_adapter = get_system_tools_adapter(allow_commands=allow_commands)
+            registry.register(system_adapter)
+            print("Loaded system tools (file operations, command execution)")
+        except Exception as e:
+            print(f"Warning: Failed to load system tools: {e}")
     
     # Discover all cookbooks
     all_cookbooks = discover_cookbooks()
@@ -98,8 +112,10 @@ def load_adapters(
 def run_agent(
     question: str,
     cookbook_names: List[str],
-    max_iterations: int = 20,
-    shared: Optional[Dict[str, Any]] = None
+    max_iterations: int = 100,
+    shared: Optional[Dict[str, Any]] = None,
+    include_system_tools: bool = True,
+    allow_commands: bool = True
 ) -> str:
     """
     Run the unified agent with specified cookbooks.
@@ -109,6 +125,8 @@ def run_agent(
         cookbook_names: List of cookbook names to enable
         max_iterations: Maximum decision iterations
         shared: Optional initial shared state
+        include_system_tools: Whether to include built-in system tools
+        allow_commands: Whether to allow command execution
         
     Returns:
         The final answer
@@ -120,7 +138,11 @@ def run_agent(
     shared["question"] = question
     
     # Load adapters
-    registry = load_adapters(cookbook_names)
+    registry = load_adapters(
+        cookbook_names,
+        include_system_tools=include_system_tools,
+        allow_commands=allow_commands
+    )
     shared["adapter_registry"] = registry
     
     # Initialize adapters
@@ -149,6 +171,10 @@ def run_agent_loop(
     shared["question"] = question
     shared["context"] = shared.get("context", "")
     shared["iteration"] = 0
+    shared["adapter_registry"] = registry  # Critical: pass registry to nodes
+    
+    # Initialize adapters if not already done
+    registry.initialize_all(shared)
     
     flow = create_unified_flow()
     flow.run(shared)

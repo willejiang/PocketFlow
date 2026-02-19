@@ -160,6 +160,53 @@ If neither adapter.py nor manifest exists, the unified agent will analyze the co
 4. (Optional) Create `cookbook_manifest.yaml` for declarative configuration
 5. The unified agent will automatically discover your cookbook
 
+## Built-in System Tools
+
+The unified agent includes built-in system tools for fundamental operations that are always available:
+
+### File Operations
+| Action | Description |
+|--------|-------------|
+| `read_file` | Read file contents (with optional line range) |
+| `write_file` | Write/append content to a file |
+| `list_directory` | List files and directories (with glob patterns) |
+| `file_exists` | Check if a file or directory exists |
+| `delete_file` | Delete a file |
+| `create_directory` | Create directories (including parents) |
+
+### Command Execution
+| Action | Description |
+|--------|-------------|
+| `run_command` | Execute shell commands with timeout |
+
+### Why Built-in?
+
+These system tools cannot be created by the self-evolving agent due to security restrictions. The tool registry explicitly blocks dangerous operations like `open()`, `subprocess`, `os.system` to ensure dynamically created tools are safe. The built-in system tools provide these fundamental capabilities with proper security controls:
+
+- File operations are restricted to a configurable working directory
+- Command execution has configurable timeout
+- Output is truncated to prevent memory issues
+- Commands can be disabled entirely if needed
+
+### Disabling System Tools
+
+```python
+# Run without system tools
+from flow import run_agent
+answer = run_agent(
+    question="Your question",
+    cookbook_names=["pocketflow-agent"],
+    include_system_tools=False  # Disable file/command ops
+)
+
+# Run with system tools but no command execution
+answer = run_agent(
+    question="Your question",
+    cookbook_names=["pocketflow-agent"],
+    allow_commands=False  # File ops only
+)
+```
+
 ## Available Cookbooks
 
 Run `python main.py --list` to see all available cookbooks grouped by tags:
@@ -216,7 +263,17 @@ pocketflow-unified-agent/
 ├── adapters/
 │   ├── __init__.py
 │   ├── base.py          # CookbookAdapter, AdapterAction, AdapterRegistry
-│   └── discovery.py     # Cookbook discovery and auto-generation
+│   ├── discovery.py     # Cookbook discovery and auto-generation
+│   └── system_tools.py  # Built-in file/command operations
+├── model_providers/
+│   ├── __init__.py
+│   ├── base.py          # ModelProvider base class
+│   ├── factory.py       # Provider factory
+│   ├── openai_provider.py
+│   ├── anthropic_provider.py
+│   ├── ollama_provider.py
+│   ├── transformers_provider.py
+│   └── vllm_provider.py
 ├── templates/
 │   ├── adapter_template.py
 │   └── cookbook_manifest.yaml

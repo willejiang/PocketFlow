@@ -50,7 +50,7 @@ class DecideAction(Node):
     Uses the adapter registry to present ALL available actions to the LLM.
     """
     
-    def __init__(self, max_iterations: int = 20):
+    def __init__(self, max_iterations: int = 100):
         super().__init__()
         self.max_iterations = max_iterations
     
@@ -110,6 +110,7 @@ parameters:
 ```"""
         
         response = call_llm(prompt)
+        print(f"LLM Response:\n{response}")
         decision = _safe_yaml_parse(response, {
             "action": "answer",
             "parameters": {"answer": "Unable to process request"},
