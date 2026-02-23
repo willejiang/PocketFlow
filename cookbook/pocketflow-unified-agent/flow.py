@@ -162,16 +162,32 @@ def run_agent(
 def run_agent_loop(
     question: str,
     registry: AdapterRegistry,
-    shared: Dict[str, Any]
+    shared: Dict[str, Any],
+    reset_history: bool = True
 ) -> str:
     """
     Run a single agent loop with an existing registry.
     Used for interactive mode.
+    
+    Args:
+        question: The question to answer
+        registry: The adapter registry to use
+        shared: Shared state dictionary
+        reset_history: If True, reset action history for fresh start (default True)
     """
     shared["question"] = question
-    shared["context"] = shared.get("context", "")
     shared["iteration"] = 0
     shared["adapter_registry"] = registry  # Critical: pass registry to nodes
+    
+    if reset_history:
+        # Fresh start - clear previous action tracking
+        shared["context"] = ""
+        shared["action_history"] = []
+        shared["loop_count"] = 0
+    else:
+        # Continue from previous state
+        shared["context"] = shared.get("context", "")
+        shared["action_history"] = shared.get("action_history", [])
     
     # Initialize adapters if not already done
     registry.initialize_all(shared)
